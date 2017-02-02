@@ -67,3 +67,44 @@ for (var i=0; i < 5; i = i +1) {
 }
 ```
 
+### Functions
+```
+fun makeBreakfastFor(name) {
+  print "Breakfast for " + name; 
+} // it returns nil
+
+fun sumPlease(a, b) {
+  return a + b;
+}
+```
+```
+// functions are first-class in Lox
+fun doSomeMath(a, b, op) {
+  return op(a, b);
+}
+doSomeMath(sumPlease, 5, 6);
+```
+
+Lox also supports closures, local functions and block scope.
+
+### Classes
+```
+class Breakfast {
+  init(name) {
+    this.name = name;
+  }
+  cook() {
+    print "Enjoy your breakfast " + this.name;
+  }
+}
+
+class Brunch < Breakfast {
+  init(name, drink) {
+    super.init(name);
+    this.drink = drink;
+  }
+}
+
+var johnBr = Breakfast("John");
+johnBr.cook(); // "Enjoy your breakfast John"
+```
