@@ -1,7 +1,9 @@
 package com.craftinginterpreters.lox;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.craftinginterpreters.lox.TokenType.*;
 
@@ -11,6 +13,27 @@ class Scanner {
     private int start = 0;      // first character in current lexeme
     private int current = 0;    // current character in source
     private int line = 1;
+
+    private static final Map<String, TokenType> keywords;
+    static {
+      keywords = new HashMap<>();
+      keywords.put("and", AND);
+      keywords.put("or", OR);
+      keywords.put("true", TRUE);
+      keywords.put("false", FALSE);
+      keywords.put("class", CLASS);
+      keywords.put("fun", FUN);
+      keywords.put("for", FOR);
+      keywords.put("if", IF);
+      keywords.put("else", ELSE);
+      keywords.put("nil", NIL);
+      keywords.put("print", PRINT);
+      keywords.put("return", RETURN);
+      keywords.put("this", THIS);
+      keywords.put("super", SUPER);
+      keywords.put("while", WHILE);
+      keywords.put("var", VAR);
+    };
 
     Scanner(String source) {
         // raw source code
@@ -59,9 +82,71 @@ class Scanner {
         return source.charAt(current);
     }
 
+    // two character lookahead
+    private char peekNext() {
+        int next = current + 1;
+        if (next >= source.length()) return '\0';
+        return source.charAt(next);
+    }
+
+    private boolean isDigit(char c) {
+        return (c >= '0' && c <= '9');
+    }
+
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') ||
+                (c >= 'A' && c <= 'Z') ||
+                (c == '_');
+    }
+
+    private boolean isAlphaNumeric(char c) {
+        return isAlpha(c) || isDigit(c);
+    }
+
+    private void string() {
+        while (peek() != '"' || isAtEnd()) {
+            if (peek() == '\n') line += 1;
+            advance();
+        }
+
+        if (isAtEnd()) {
+            Lox.error(line, "Unterminated string");
+            return;
+        }
+
+        // the closing "
+        advance();
+        String value = source.substring(start + 1, current - 1);
+        addToken(STRING, value);
+    }
+
+    private void number() {
+        while (isDigit(peek())) advance();
+
+        // look for fractional part
+        if (peek() == '.' && isDigit(peekNext())) {
+            // consume the '.'
+            advance();
+            while (isDigit(peek())) advance();
+        }
+
+        double value = Double.parseDouble(source.substring(start, current));
+        addToken(NUMBER, value);
+    }
+
+    private void identifier() {
+        while (isAlphaNumeric(peek())) advance();
+        String text = source.substring(start, current);
+
+        // check if is an identifier
+        TokenType type = keywords.get(text);
+        if (type == null) type = IDENTIFIER;
+        addToken(type);
+    }
+
     private void scanToken() {
+        // _ _ _ _ c current _ _ _ _
         char c = advance();
-        // c = current - 1;
         switch(c) {
             case '(': addToken(LEFT_PAREN); break;
             case ')': addToken(RIGHT_PAREN); break;
@@ -85,15 +170,39 @@ class Scanner {
             case '/':
                 if (match('/')) {
                     // this is a comment, consume characters until the end of the line
+                    // we use peek instead of current because we want to keep \n character
+                    // it will fall through a special case and we'll increment line variable
                     while(peek() != '\n' && !isAtEnd()) advance();
                 } else {
                     addToken(SLASH); break;
                 }
                 break;
 
-            default:
-                Lox.error(line, "Unexpected character.");
+            // ignore whitespaces
+            case ' ':
+            case '\t':
+            case '\r':
                 break;
+
+            case '\n':
+                line += 1;
+                break;
+
+            // literals
+            case '"': string(); break;
+
+
+            default:
+                if (isDigit(c)) {
+                    number();
+                } else if (isAlpha(c)) {
+                    // if it starts with a letter or _ could be
+                    // an identifier or a reserved word
+                    identifier();
+                } else {
+                    Lox.error(line, "Unexpected character.");
+                    break;
+                }
         }
     }
 
