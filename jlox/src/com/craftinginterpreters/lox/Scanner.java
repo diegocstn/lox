@@ -157,7 +157,11 @@ class Scanner {
             case '-': addToken(MINUS); break;
             case '+': addToken(PLUS); break;
             case ';': addToken(SEMICOLON); break;
-            case '*': addToken(STAR); break;
+            case '*':
+                if (!match('/')) {
+                    addToken(STAR);
+                }
+                break;
 
             // special cases for token that might have
             // more than one characters (e.g. ! vs !=)
@@ -172,7 +176,10 @@ class Scanner {
                     // this is a comment, consume characters until the end of the line
                     // we use peek instead of current because we want to keep \n character
                     // it will fall through a special case and we'll increment line variable
-                    while(peek() != '\n' && !isAtEnd()) advance();
+                    while (peek() != '\n' && !isAtEnd()) advance();
+                } else if (match('*')) {
+                    // skip multiline comments C form /* */
+                    while (peek() != '*' && peekNext() != '/' && !isAtEnd()) advance();
                 } else {
                     addToken(SLASH); break;
                 }
