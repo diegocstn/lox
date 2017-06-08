@@ -32,9 +32,9 @@ public class GenerateAst {
 
         writer.println("package com.craftinginterpreters.lox;");
         writer.println("");
-        writer.println("import java.util.List");
+        writer.println("import java.util.List;");
         writer.println("");
-        writer.println("abstract class" + baseClass + " {");
+        writer.println("abstract class " + baseClass + " {");
         for (String type : types) {
            defineType(type, writer, baseClass);
         }
@@ -45,19 +45,24 @@ public class GenerateAst {
     private static void defineType(String type, PrintWriter writer, String baseClass) {
         String className = type.split(":")[0].trim();
         String fieldsList = type.split(":")[1].trim();
-        String fields[] = fieldsList.split(",");
-        writer.println("static class " + className + "extends " + baseClass + "{");
+        writer.println("    static class " + className + " extends " + baseClass + " {");
 
-        writer.println("    " + className + "(" + fieldsList + "){");
-        for (String field: fields) {
-            writer.println("this." + field.split(" ")[1] + " = " + field.split(" ")[1]);
-        }
-        writer.println("}");
+        // constructor
+        writer.println("        " + className + "(" + fieldsList + "){");
+        String fields[] = fieldsList.split(", ");
 
         for (String field: fields) {
-            writer.println("    final" + field + ";");
+            String fieldName = field.split(" ")[1].trim();
+            writer.println(
+                    "            this." + fieldName + " = " + fieldName + ";"
+            );
         }
-        writer.println("}");
+        writer.println("        }");
+
+        for (String field: fields) {
+            writer.println("        final " + field + ";");
+        }
+        writer.println("    }");
         writer.println("");
     }
 }
