@@ -35,11 +35,25 @@ public class GenerateAst {
         writer.println("import java.util.List;");
         writer.println("");
         writer.println("abstract class " + baseClass + " {");
+
+        // visitor interface
+        defineVisitor(types, baseClass, writer);
+
+        // AST classes
         for (String type : types) {
            defineType(type, writer, baseClass);
         }
         writer.println("}");
         writer.close();
+    }
+
+    private static void defineVisitor(List<String> types, String baseClass, PrintWriter writer) {
+        writer.println("    interface Visitor<R> {");
+        for (String type : types) {
+            String typeName = type.split(":")[0].trim();
+            writer.println("        R visit" + typeName + baseClass + "(" + typeName + " " + baseClass.toLowerCase() + ");");
+        }
+        writer.println("    }");
     }
 
     private static void defineType(String type, PrintWriter writer, String baseClass) {
