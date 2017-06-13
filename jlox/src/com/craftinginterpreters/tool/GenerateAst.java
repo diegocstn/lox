@@ -39,10 +39,16 @@ public class GenerateAst {
         // visitor interface
         defineVisitor(types, baseClass, writer);
 
+        // accept method
+        writer.println("");
+        writer.println("    abstract <R> R accept(Visitor<R> visitor);");
+        writer.println("");
+
         // AST classes
         for (String type : types) {
-           defineType(type, writer, baseClass);
+            defineType(type, writer, baseClass);
         }
+
         writer.println("}");
         writer.close();
     }
@@ -76,6 +82,13 @@ public class GenerateAst {
         for (String field: fields) {
             writer.println("        final " + field + ";");
         }
+
+        // concrete accept method
+        writer.println("");
+        writer.println("        <R> R accept(Visitor<R> visitor) {");
+        writer.println("            return visitor.visit" + className + baseClass + "(this);");
+        writer.println("        }");
+
         writer.println("    }");
         writer.println("");
     }
