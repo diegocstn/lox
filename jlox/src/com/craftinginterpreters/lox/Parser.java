@@ -66,7 +66,7 @@ class Parser {
     private void synchronize() {
         advance();
 
-        // discard token until we reach new statement
+        // discard tokens until we reach new statement
         while (!isAtEnd()) {
             if (previous().type == SEMICOLON) return;
 
